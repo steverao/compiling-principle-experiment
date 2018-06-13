@@ -42,27 +42,25 @@ void Preprocess(){
 	int n=sizeof(tempFile)/sizeof(char);
 	int k=0;
 	for(int i=0;i<n;){
-		int flag=0;
 		switch (tempFile[i]){
 			case ' '://删除空格 
 				if(tempFile[i+1]==' '){
-					i++;flag=1;
+					i++;
 				}else file[k++]=tempFile[i++];
 				break;
 			case '/':
 				if(tempFile[i+1]=='*'){//删除/**/内的内容 
 					while(!(tempFile[i]=='*'&&tempFile[i+1]=='/'))i++;
-					i++;flag=1;
+					i++;
 				} else if (tempFile[i+1]=='/'){//删除//后的一行注释 
 					while(tempFile[++i]!='\n');
 				}
 				i++;
 				break;
 			case '\n':
-				i++;flag=1;
+				i++;
 				break;
 			default:
-				if(!flag)
 				file[k++]=tempFile[i++];
 				break;
 		}	
@@ -121,12 +119,14 @@ int main(){
 	printf("%s\n",tempFile);
 	printf("\n%s\n",file);
 	string s1,s2;
-	for(int i=0;i<37;i++){
+	int n=sizeof(operatorOrDelimiter)/10*sizeof(char); 
+	int m=sizeof(reserveWord)/20*sizeof(char);
+	for(int i=0;i<n;i++){
 		s1=operatorOrDelimiter[i];
 		odMap.insert(make_pair(s1,i));
-		if(i<34){
+		if(i<m){
 			s2=reserveWord[i];
-			reMap.insert(make_pair(s2,i+37)); 
+			reMap.insert(make_pair(s2,i+n)); 
 		}
 	}
 	lexicalAnalyzer();
