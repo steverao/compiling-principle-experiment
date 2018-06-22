@@ -211,6 +211,26 @@ void getFirstSet(){
 	}	
 }
 
+char rmStackArray[MAXN];
+int rmIndex;
+int cnt=0,alIndex=0;
+char alStackArray[MAXN]; 
+char a,r;
+Production pdt;
+
+
+void Print(int pid=-1){
+	printf("%d\t",++cnt);
+	for(int i=0;i<alIndex;i++)printf("%c",alStackArray[i]);
+	printf("\t");
+	for(int i=rmIndex-1;i>=0;i--)printf("%c",rmStackArray[i]);
+	if(pid!=-1&&isupper(a)){
+		pdt=pMap[pid];
+		printf("\t\t%c->%s\n",pdt.start,pdt.end);
+	}else printf("\n");
+} 
+
+
 
 int main(){
 	while((fp=fopen("E://编程代码/compilingPrinciple/0614_LL(1)_Parser/Input.txt","r"))==NULL){
@@ -219,6 +239,8 @@ int main(){
 	char s1;
 	char s2[10];
 	int i=0,j=0,k=0;//分别表示产生式、非终结符和终结符数量 
+	fscanf(fp,"%s\n",rmStackArray);
+	rmIndex=strlen(rmStackArray);
 	while(fscanf(fp,"%c->%s\n",&s1,&s2)!=EOF){
 		Production pro;pro.start=s1;strcpy(pro.end,s2);//初始化产生式并将其存储 
 		pMap[i++]=pro;
@@ -238,85 +260,64 @@ int main(){
 	memset(analysisFigure,-1,sizeof(analysisFigure));
 	buildAnalysisGraph();
 	
-	char rm[]="aade#";
-	for(int i=strlen(rm);i>=0;i--){
-		rmStack.push(rm[i]);
-	}
 	
-	int cnt=0;
-	alStack.push('#');
-	alStack.push('A');
-	while(rmStack.size()>1){
-		char a=alStack.top();alStack.pop();
-		char r=rmStack.top();rmStack.pop();
+	for(int i=0;i<rmIndex;i++){
+		rmStack.push(rmStackArray[i]);
+	}
+	char start=pMap[0].start;
+	alStack.push('#');alStack.push(start);
+    alStackArray[alIndex++]='#';alStackArray[alIndex++]=start;
+	int pid,xid,yid,flag=0;
+	printf("步骤\t分析栈\t余留输入串\t所用产生式\n");
+	
+	    
+	while(rmStack.size()>0){
+		//输出分析步骤 
+		
+		a=alStack.top();
+		r=rmStack.top();
+		
 		if(isupper(a)){
-			int xid=xMap[a],yid=yMap[r];
-			int pid=analysisFigure[xid][yid];
+			
+			xid=xMap[a];yid=yMap[r];
+			pid=analysisFigure[xid][yid];
 			if(pid==-1){
-				cout<<"analysis Failed!"<<endl;
-				break;
+				flag=1;
+			    break;
 			}
-			Production pdt=pMap[pid];
-			for(int i=strlen(pdt.end);i>=0;i--){
-				alStack.push(pdt.end[i]);
+			Print(pid); 
+			pdt=pMap[pid];
+			alStack.pop();alIndex--;//将大写字母弹出栈 
+			for(int i=strlen(pdt.end)-1;i>=0;i--){
+				if(pdt.end[i]!='&'){
+					alStack.push(pdt.end[i]);
+				    alStackArray[alIndex++]=pdt.end[i];
+				}
 			}
-		} else if(a==r)continue;
-	}
-	cout<<"analysis Successfully!"<<endl;
-	
-	
-	
-	
-	
-	
-	
-	
-	/*cout<<"Analysis Figure:"<<endl;
-	for(int i=0;i<xMap.size();i++){
-		for(int j=0;j<yMap.size();j++){
-			cout<<analysisFigure[i][j]<<" ";
+		    //Print();
+			a=alStack.top();
+		    r=rmStack.top();
+		    if(a==r){
+		    	Print();
+		    	alStack.pop();alIndex--;
+			    rmStack.pop();rmIndex--;
+		    }
+			continue;
+		} else if(a==r){//将两个栈内相同的小写字母同时弹出 
+			alStack.pop();alIndex--;
+			rmStack.pop();rmIndex--;
+			Print();
+			continue;
+		}else{
+			flag=1;
+			break;
 		}
-		cout<<endl;
+		
+		
 	}
+	if(flag)printf("\nanalysis Failed!\n");
+	else printf("\nanalysis Successfully!\n");
 	
-	cout<<"First Set:"<<endl;
-	for(int i=0;i<pdFirstSet.size();i++){
-		for(set<char>::iterator it=pdFirstSet[i].begin();it!=pdFirstSet[i].end();it++){
-			cout<<(*it)<<" ";
-		}
-		cout<<endl;
-	}
-	
-	cout<<"Follow Set:"<<endl;
-	for(int i=0;i<followSet.size();i++){
-		for(set<char>::iterator it=followSet[i].begin();it!=followSet[i].end();it++){
-			cout<<(*it)<<" ";
-		}
-		cout<<endl;
-	}
-	
-	
-	cout<<"Select Set:"<<endl;
-	for(int i=0;i<selectSet.size();i++){
-	   for(set<char>::iterator it=selectSet[i].begin();it!=selectSet[i].end();it++){
-			cout<<(*it)<<" ";
-		}
-		cout<<endl;
-	}*/
-	
-	/*for(int i=0;i<firstSet.size();i++){
-		for(set<char>::iterator it=firstSet[i].begin();it!=firstSet[i].end();it++){
-			cout<<(*it)<<" ";
-		}
-		cout<<endl;
-	}
-	for(int i=0;i<pMap.size();i++)
-	cout<<pMap[i].start<<"->"<<pMap[i].end<<endl;*/
-	/*for(map<char,int>::iterator it=yMap.begin();it!=yMap.end();it++)
-	cout<<(*it).first<<":"<<(*it).second<<" ";
-	cout<<endl;
-	for(map<char,int>::iterator it=xMap.begin();it!=xMap.end();it++)
-	cout<<(*it).first<<":"<<(*it).second<<" ";*/
 	return 0;
 } 
 
