@@ -44,10 +44,6 @@ void buildAnalysisGraph(){
 	}
 }
 
-
-
-
-
 set<char> getFirstSetByString(char end[],int s){
 	set<char> Set;
 	for(int i=s;i<strlen(end);i++){
@@ -65,14 +61,14 @@ set<char> getFirstSetByString(char end[],int s){
 		}else if(firstSet[sid].count('&')){
 			set<char> fSet=firstSet[sid];
 			for(set<char>::iterator it1=fSet.begin();it1!=fSet.end();it1++){
-				if((*it1)!='&')
+				//if((*it1)!='&')
+				char c=(*it1);
 				Set.insert((*it1));//将非终结符的添加 
 		    } 
 		}
 	}
 	return Set;
 }
-
 
 void getSelectSet(){
 	for(int i=0;i<pMap.size();i++){
@@ -99,9 +95,6 @@ void getSelectSet(){
 }
 
 
-
-
-
 void getFollowSet(){
 	/*算法: 
 	*1、若A是文法开始符号，则#属于Follow(A)。 
@@ -116,7 +109,7 @@ void getFollowSet(){
 		char end[10];
 		strcpy(end,(*it).second.end);
 		for(int i=0;i<strlen(end);i++){
-			if(isupper(end[i])&&islower(end[i+1])){
+			if(isupper(end[i])&&(islower(end[i+1])||(isprint(end[i+1])&&!isalpha(end[i+1])))){
 				int eid=xMap[end[i]];
 				followSet[eid].insert(end[i+1]);
 				i++;
@@ -130,8 +123,10 @@ void getFollowSet(){
 			if(isupper(end[i])&&isupper(end[i+1])){
 				set<char> Set=getFirstSetByString(end,i+1);
 				int mid=xMap[end[i]];
-				for(set<char>::iterator it1=Set.begin();it1!=Set.end();it1++)
-				followSet[mid].insert((*it1));
+				for(set<char>::iterator it1=Set.begin();it1!=Set.end();it1++){
+				    if((*it1)!='&')
+				    followSet[mid].insert((*it1));
+				}
 			}
 		}
 	}
@@ -140,20 +135,27 @@ void getFollowSet(){
 	    int sid=xMap[start];
 		char end[10];
 		strcpy(end,(*it).second.end);
-		for(int i=0;i<strlen(end);i++){
+		for(int i=strlen(end)-1;i>=0;i--){
 			set<char> Set;
-			if(i+1<strlen(end))
-			Set=getFirstSetByString(end,i+1); 
-			if(isupper(end[i])&&((i+1)==strlen(end)||Set.empty())){
+			Set=getFirstSetByString(end,i);
+			if(!isupper(end[i]))break;
+			if(isupper(end[i])&&!Set.count('&')){
 				int eid=xMap[end[i]];
-				for(set<char>::iterator it1=followSet[sid].begin();it1!=followSet[sid].end();it1++)
-				followSet[eid].insert((*it1));
+				for(set<char>::iterator it1=followSet[sid].begin();it1!=followSet[sid].end();it1++){
+				    followSet[eid].insert((*it1));
+				}
+				break;
+			} 
+			else if(i>=0&&isupper(end[i])&&Set.count('&')){
+				int eid=xMap[end[i]];
+				for(set<char>::iterator it1=followSet[sid].begin();it1!=followSet[sid].end();it1++){
+					followSet[eid].insert((*it1));
+				}
+			
 			}
 		} 
 	}	
 }
-
-
 
 void getFirstSet(){
 	/*
@@ -183,8 +185,10 @@ void getFirstSet(){
 						firstSet[sid].insert(x);
 						vis[pid]=1;
 					    break;//计算完成,跳出所在最近for循环 
+					}else if(isupper(p.end[i])&&firstSet[xMap[x]].size()==0){
+					    	break;
 					}
-				    else if(isupper(p.end[i])){//次简单情况 
+				    else if(isupper(p.end[i])&&firstSet[xMap[x]].size()!=0){//次简单情况 
 				    	int id=xMap[x];//非终结符的编号 
 					    set<char> fSet=firstSet[id];
 					    if(!fSet.count('&')){
@@ -194,7 +198,8 @@ void getFirstSet(){
 					        } 
 					        vis[pid]=1;
 					        break;//计算完成,跳出所在最近for循环 
-					    }else{//最复杂情况
+					    }
+						else if(isupper(p.end[i])&&firstSet[xMap[x]].size()!=0&&firstSet[xMap[x]].count('&')){//最复杂情况
 					    	for(set<char>::iterator it1=fSet.begin();it1!=fSet.end();it1++){
 				    		    if((*it1)!='&'){
 				    		    	firstSet[sid].insert((*it1));//将非终结符的first集添入p.start非终结符first集中 
@@ -313,11 +318,9 @@ int main(){
 			break;
 		}
 		
-		
 	}
 	if(flag)printf("\nanalysis Failed!\n");
 	else printf("\nanalysis Successfully!\n");
-	
 	return 0;
 } 
 
